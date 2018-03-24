@@ -1,0 +1,70 @@
+#include <ros/ros.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+static const std::string OPENCV_WINDOW = "Image window";
+
+class ImageConverter
+{
+	ros::NodeHandle nh_; //在类下, 缺省值为private.
+	image_transport::ImageTransport it_; //用来创建publisher或者subscriber
+	image_transport::Subscriber image_sub_; //管理图像的订阅及其回调函数
+	image_transport::Publisher image_pub_;//管理图像话题的发布
+
+public:
+	ImageConverter(): it_(nh_)
+	{
+		// Subscrive to input video feed and publish output video feed
+		image_sub_ = it_.subscribe("/image_raw", 1, &ImageConverter::imageCb, this); //关联了回调函数
+		//是不是也可以subscribe<sensor_msgs::Image>("/camera/image_raw", 1, &ImageConverter::imageCb, this);
+//"/camera/rgb/image_color "为Kinect输出彩色图像的Topic
+		image_pub_ = it_.advertise("/image_converter/output_video", 1); //没有指名发布的数据类型??
+
+		cv::namedWindow(OPENCV_WINDOW);
+	}
+
+	~ImageConverter()
+	{
+		cv::destroyWindow(OPENCV_WINDOW);
+	}
+
+	void imageCb(const sensor_msgs::ImageConstPtr& msg)//Callback
+	{
+		cv_bridge::CvImagePtr cv_ptr; //非指针
+		try
+		{
+			cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8); //返回类型为CvImagePtr//非指针
+			//是BGR顺序, cvtColor中也是BGR顺序的 //::  ::  两个名字空间 //对象之间可以这样直接赋值??? 看看toCvCopy的源代码???
+		}
+		catch (cv_bridge::Exception& e)
+		{
+			ROS_ERROR("cv_bridge exception: %s", e.what());
+			return;
+		}
+
+		// Draw an example circle on the video stream
+		if (cv_ptr->image.rows > 60 && cv_ptr->image.cols > 60) 
+			cv::circle(cv_ptr->image, cv::Point(50, 50), 10, CV_RGB(255,0,0)); 
+// cv::circle()中不是指针, 通过Mat类中指向图像数据的指针来修改图像
+//cv::Mat中含有矩阵头和指向数据的指针, 应该是该指针起作用了
+//再比如 Mat gray_image; cvtColor( image, gray_image, CV_BGR2GRAY ); 指针暗含在Mat类型里面了
+
+		// Update GUI Window
+		cv::imshow(OPENCV_WINDOW, cv_ptr->image); // cv::imshow()针对的是Mat类型//非指针
+		cv::waitKey(3);
+
+		// Output modified video stream
+		image_pub_.publish(cv_ptr->toImageMsg());//发布一个sensor_msgs::ImagePtr 形式的消息 //非指针
+	}
+};
+
+int main(int argc, char** argv)
+{
+	ros::init(argc, argv, "image_converter");
+	ImageConverter ic;
+	ros::spin();//是小写的s
+	return 0;
+}

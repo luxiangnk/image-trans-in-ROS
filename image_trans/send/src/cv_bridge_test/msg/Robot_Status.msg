@@ -1,0 +1,20 @@
+float64 position_x
+float64 position_y
+float64 position_st
+float64 velocity_l
+float64 velocity_r
+float64 current_rst1
+float64 current_rst2
+float64 current_rst3
+float64 current_rst4
+float64 current_lst1
+float64 current_lst2
+float64 current_lst3
+float64 current_lst4
+float64 current_lpx
+float64 current_lpy
+float64 current_lpz
+float64 current_rpx
+float64 current_rpy
+float64 current_rpz
+

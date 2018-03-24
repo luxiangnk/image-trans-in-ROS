@@ -1,0 +1,20 @@
+<package>
+  <description brief="cv_bridge_test">
+
+     cv_bridge_test
+
+  </description>
+  <author>wmkevin</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cv_bridge_test</url>
+  <depend package="std_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="opencv2"/>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="image_transport"/>
+
+</package>
+
+
